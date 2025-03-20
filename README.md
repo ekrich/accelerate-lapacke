@@ -144,42 +144,26 @@ via Homebrew or MacPorts):
 - Fortran compiler (e.&nbsp;g. `gfortran` contained in the `gcc` package) to
   make it through the Reference LAPACK configure script
 
-### Configuration with CMake ###
+### Workflow with CMake ###
 
 Use the `accelerate-lapacke32` preset (or the `accelerate-lapacke64` preset for
 the ILP64 interface) with CMake:
 
 ```shell
-$ cmake --preset accelerate-lapacke32
+$ cmake --workflow --preset accelerate-lapacke32
 ```
 
 This will configure LAPACKE to be installed in your `~/.local` directory by
 default. If you prefer a different install location (e.&nbsp;g. `/opt/custom`),
-you can change it like this:
+you can change it using a `CMakeUserPresets.json` file, for which a template
+file is provided:
 
 ```shell
-$ cmake --preset accelerate-lapacke32 -D "CMAKE_INSTALL_PREFIX=/opt/custom"
+$ cmake --workflow --preset user-accelerate-lapacke32
 ```
 
 I wouldn't recommend installing to `/usr/local` (used by Homebrew on Intel Macs)
 or `/opt/local` (used by MacPorts).
-
-### Build and install ###
-
-When the configuration finished successfully (fingers crossed), you can build with the
-same preset name (`accelerate-lapacke32` or `accelerate-lapacke64`):
-
-```shell
-$ cmake --build --preset accelerate-lapacke32 --verbose
-```
-
-If everything worked as intended, linking the library should be successful. Now,
-you can install to the previously configured install prefix by building the
-install target:
-
-```shell
-$ cmake --build --preset accelerate-lapacke32 --verbose --target install
-```
 
 ### Using LAPACKE in another project ###
 
