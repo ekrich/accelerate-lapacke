@@ -27,7 +27,7 @@ set(CMAKE_MAXIMUM_SUPPORTED_VERSION 3.31)
 
 cmake_minimum_required(VERSION 3.12...${CMAKE_MAXIMUM_SUPPORTED_VERSION})
 
-project(AccelerateLAPACKE VERSION 1.1.0 LANGUAGES C)
+project(AccelerateLAPACKE VERSION 1.2.0 LANGUAGES C)
 
 include(FetchContent)
 
