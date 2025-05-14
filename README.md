@@ -25,118 +25,23 @@ SOFTWARE.
 
 # Accelerate LAPACKE #
 
-Since MacOS 13.3 Ventura, Apple's Accelerate framework comes with a new
-[BLAS/LAPACK interface][accelerate-docs] compatible with [Reference LAPACK
-v3.9.1][lapack-v3.9.1] in addition to the quite outdated [Reference LAPACK
-v3.2.1][lapack-v3.2.1]. It also provides an ILP64 interface. On Apple Silicon
-M-processors, it utilises the [proprietary AMX co-processor][apple-amx], which
-makes it especially interesting. Unfortunately, it comes without the LAPACKE
-C-interface library.
+Unfortunately, Apple's Accelerate framework doesn't provide the LAPACKE
+C-interface library. Since MacOS 13.3 Ventura, the [BLAS/LAPACK
+interface][accelerate-docs] provided by Accelerate is recent enough to support
+the LAPACKE library.
 
-**Update**: With the release of MacOS 15.0 Sequoia, Apple updated the Accelerate
-framework to be compatible with [Reference LAPACK v3.11.0][lapack-v3.11.0].
-Unfortunately, there is no mention of it in the [MacOS 15.0 Sequoia Release
-Notes][macos15-release-notes], but the note in the [Accelerate BLAS
-docs][accelerate-docs] has been updated accordingly.
-
-These new interfaces are hidden behind the preprocessor defines
-`ACCELERATE_NEW_LAPACK` and `ACCELERATE_LAPACK_ILP64` and they only work, if you
-include the Accelerate C/C++ headers.
+This project uses [Accelerate LAPACK][accelerate-lapack] to build the LAPACKE
+library against the Accelerate NEWLAPACK interface. More info on BLAS/LAPACK in
+Accelerate can be found there, too.
 
 [accelerate-docs]: https://developer.apple.com/documentation/accelerate/blas-library
-[apple-amx]: https://github.com/corsix/amx
-[lapack-v3.2.1]: https://netlib.org/lapack/#_lapack_version_3_2_1
-[lapack-v3.9.1]: https://github.com/Reference-LAPACK/lapack/releases/tag/v3.9.1
-[lapack-v3.11.0]: https://github.com/Reference-LAPACK/lapack/releases/tag/v3.11.0
-[macos15-release-notes]: https://developer.apple.com/documentation/macos-release-notes/macos-15-release-notes
+[accelerate-lapack]: https://github.com/lepus2589/accelerate-lapack
 
-- [The Problem](#the-problem)
-- [The Solution](#the-solution)
-  - [The alias files (to use in other projects)](#the-alias-files-to-use-in-other-projects)
 - [How to compile](#how-to-compile)
   - [Prerequisites](#prerequisites)
   - [Workflow with CMake](#workflow-with-cmake)
     - [CMake v4 compatibility](#cmake-v4-compatibility)
   - [Using LAPACKE in another project](#using-lapacke-in-another-project)
-
-## The Problem ##
-
-But what if you have to or just want to link against the Accelerate framework
-without including the C/C++ headers, e.&nbsp;g. when compiling Fortran code or a
-third-party project, that uses the standard BLAS/LAPACK API? Well, you're out of
-luck. The binary symbols for the new LAPACK version exported by the Accelerate
-framework do not adhere to the BLAS/LAPACK API. Thus, they cannot be resolved by
-the linker, when linking any program or library that uses the standard
-BLAS/LAPACK API.
-
-Take, for example, the `dgeqrt` LAPACK routine, that is used by the [Reference
-LAPACK CMake script][dgeqrt-ref] to determine, if the user provided LAPACK
-version is recent enough. When the Fortran test executable is compiled, the
-`gfortran` compiler creates a function call with the binary symbol `_dgeqrt_`,
-which results in the following error when linking to Accelerate (`ld` is the
-Apple system linker, here):
-
-```plaintext
-ld: Undefined symbols:
-  _dgeqrt_, referenced from:
-      _MAIN__ in testFortranCompiler.f.o
-```
-
-The reason for this is, that the binary symbol provided by the Accelerate
-framework is called `_dgeqrt$NEWLAPACK`, literally. This is a symbol, that no
-Fortran compiler will probably ever emit voluntarily. So, what to do?
-
-[dgeqrt-ref]: https://github.com/Reference-LAPACK/lapack/blob/v3.11.0/CMakeLists.txt#L365-L366
-
-## The Solution ##
-
-According to its `man` page, the Apple system linker `ld` provides the options
-`-alias` and `-alias_list`, which let you create alias names for existing binary
-symbols. Calling the linker with `-alias '_dgeqrt$NEWLAPACK' _dgeqrt_` makes the
-linking of the above Fortran test executable finish successfully.
-
-Because BLAS and LAPACK contain quite a number of subroutines and functions,
-this CMake scipt uses the `-alias_list` option, which loads a plaintext file
-listing all the aliases.
-
-To generate the full alias list for the Accelerate NEWLAPACK interface, it
-parses the symbols listed in the BLAS and LAPACK text-based `.dylib` stubs. For
-every symbol that ends in `$NEWLAPACK` (or `$NEWLAPACK$ILP64` for the ILP64
-interface), an alias is added to the alias file.
-
-The additional linker options get attached to new interface library targets,
-which are injected into the Reference LAPACK configure process using the
-`CMAKE_REQUIRED_LIBRARIES` variable for the Fortran test compiles and the
-`LINK_LIBRARIES` target property for the shared LAPACKE library.
-
-This enables the compilation of the LAPACKE C-interface library for the
-Accelerate framework (e.&nbsp;g. to be used in the `Eigen3` library). Analyzing
-the resulting `.dylib` with `otool`, you can see:
-
-```shell
-$ otool -L ./build/32/_deps/reference-lapack-build/lib/liblapacke.dylib
-./build/32/_deps/reference-lapack-build/lib/liblapacke.dylib:
-    @rpath/liblapacke.3.dylib (compatibility version 3.0.0, current version 3.11.0)
-    /System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate (compatibility version 1.0.0, current version 4.0.0)
-    /usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1351.0.0)
-```
-
-Only the Accelerate framework and the System library are linked into the
-`.dylib`. No `libgfortran` or other libraries are needed.
-
-### The alias files (to use in other projects) ###
-
-After the CMake configuration, the alias files can be found in `./build/<32|64>/src`:
-
-```plaintext
-./build/<32|64>/src
-├── new-blas-ilp64.alias
-├── new-blas.alias
-├── new-lapack-ilp64.alias
-└── new-lapack.alias
-```
-
-These files can be used to link other projects against Accelerate, too, of course!
 
 ## How to compile ##
 
@@ -181,6 +86,19 @@ $ cmake --workflow --preset user-accelerate-lapacke32
 I wouldn't recommend installing to `/usr/local` (used by Homebrew on Intel Macs)
 or `/opt/local` (used by MacPorts).
 
+Analyzing the resulting `.dylib` with `otool`, you can see:
+
+```shell
+$ otool -L ./build/32/_deps/reference-lapack-build/lib/liblapacke.dylib
+./build/32/_deps/reference-lapack-build/lib/liblapacke.dylib:
+    @rpath/liblapacke.3.dylib (compatibility version 3.0.0, current version 3.11.0)
+    /System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate (compatibility version 1.0.0, current version 4.0.0)
+    /usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1351.0.0)
+```
+
+Only the Accelerate framework and the System library are linked into the
+`.dylib`. No `libgfortran` or other libraries are needed.
+
 #### CMake v4 compatibility ####
 
 To build the project with CMake v4 or higher, you must explicitly provide the
@@ -198,6 +116,12 @@ the CMake package in the other project's `CMakeLists.txt` file:
 find_package(LAPACKE CONFIG)
 ```
 
+or
+
+```cmake
+find_package(LAPACKE64 CONFIG)
+```
+
 and providing the above install location via the `CMAKE_PREFIX_PATH` variable
 from the command line:
 
@@ -205,5 +129,5 @@ from the command line:
 $ cmake -S . -B ./build -D "CMAKE_PREFIX_PATH=~/.local"
 ```
 
-This makes the imported `lapacke` shared library target available in the other
-project's `CMakeLists.txt`.
+This makes the imported `lapacke`/`lapacke64` shared library target available in
+the other project's `CMakeLists.txt`.
