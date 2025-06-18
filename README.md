@@ -91,7 +91,7 @@ Analyzing the resulting `.dylib` with `otool`, you can see:
 ```shell
 $ otool -L ./build/32/_deps/reference-lapack-build/lib/liblapacke.dylib
 ./build/32/_deps/reference-lapack-build/lib/liblapacke.dylib:
-    @rpath/liblapacke.3.dylib (compatibility version 3.0.0, current version 3.11.0)
+    @rpath/liblapacke.3.dylib (compatibility version 3.0.0, current version 3.12.0)
     /System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate (compatibility version 1.0.0, current version 4.0.0)
     /usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1351.0.0)
 ```
