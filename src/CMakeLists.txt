@@ -63,12 +63,24 @@ if (CMAKE_VERSION VERSION_GREATER_EQUAL 4)
 endif ()
 
 if (BUILD_INDEX64)
+    if (TARGET "blas64")
+        message(FATAL_ERROR "LAPACKE failed to use BLAS provided by Accelerate and included Netlib's Reference BLAS implementation into the build.")
+    elseif (TARGET "lapack64")
+        message(FATAL_ERROR "LAPACKE failed to use LAPACK provided by Accelerate and included Netlib's Reference LAPACK implementation into the build.")
+    endif ()
+
     # Replace the LINK_LIBRARIES of the lapacke64 target with the ILP64 ones.
     # The lapacke64 target was created linking to the NEW_LAPACK_IMPORTED
     # target, which we had to add to satisfy the Check... tests, that the
     # Reference LAPACK build script does.
     set_target_properties(lapacke64 PROPERTIES LINK_LIBRARIES "${LAPACK_LIBRARIES}")
 else ()
+    if (TARGET "blas")
+        message(FATAL_ERROR "LAPACKE failed to use BLAS provided by Accelerate and included Netlib's Reference BLAS implementation into the build.")
+    elseif (TARGET "lapack")
+        message(FATAL_ERROR "LAPACKE failed to use LAPACK provided by Accelerate and included Netlib's Reference LAPACK implementation into the build.")
+    endif ()
+
     # Replace the LINK_LIBRARIES of the lapacke target with the NEWLAPACK ones.
     # The lapacke target was created linking to the NEW_LAPACK_IMPORTED target,
     # which we had to add to satisfy the Check... tests, that the Reference
