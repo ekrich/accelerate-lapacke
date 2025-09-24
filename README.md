@@ -67,8 +67,11 @@ via Homebrew or MacPorts):
 
 ### Workflow with CMake ###
 
-Use the `accelerate-lapacke32` preset (or the `accelerate-lapacke64` preset for
-the ILP64 interface) with CMake:
+First, you must [select a MacOS SDK matching your MacOS system][sdk-selection].
+
+Then use the `accelerate-lapacke32` preset (or the `accelerate-lapacke64` preset
+for the ILP64 interface) with CMake called by `xcrun`, as described in the SDK
+selection:
 
 ```shell
 $ cmake --workflow --preset accelerate-lapacke32
@@ -99,13 +102,7 @@ $ otool -L ./build/32/_deps/reference-lapack-build/lib/liblapacke.dylib
 Only the Accelerate framework and the System library are linked into the
 `.dylib`. No `libgfortran` or other libraries are needed.
 
-#### CMake v4 compatibility ####
-
-To build the project with CMake v4 or higher, you must explicitly provide the
-`CMAKE_OSX_SYSROOT` variable in your `CMakeUserPresets.json`. Both the
-`user-accelerate-lapacke32` and `user-accelerate-lapacke64` presets should
-additionally have the cache variable `"CMAKE_OSX_SYSROOT": "macosx"`. This is
-not included by default.
+[sdk-selection]: https://github.com/lepus2589/accelerate-lapack?tab=readme-ov-file#maxos-sdk-selection
 
 ### Using LAPACKE in another project ###
 

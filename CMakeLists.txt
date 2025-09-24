@@ -27,7 +27,7 @@ set(CMAKE_MAXIMUM_SUPPORTED_VERSION 4.0)
 
 cmake_minimum_required(VERSION 3.12...${CMAKE_MAXIMUM_SUPPORTED_VERSION})
 
-project(AccelerateLAPACKE VERSION 1.6.1 LANGUAGES C Fortran)
+project(AccelerateLAPACKE VERSION 1.7.0 LANGUAGES C Fortran)
 
 include(FetchContent)
 
@@ -44,9 +44,9 @@ message(STATUS "Trying to link to ILP64 interface of LAPACK: ${BUILD_NEW_LAPACK}
 FetchContent_Declare(
     AccelerateLAPACK
     GIT_REPOSITORY "https://github.com/lepus2589/accelerate-lapack.git"
-    GIT_TAG v1.5.0
+    GIT_TAG v1.6.0
     SYSTEM
-    FIND_PACKAGE_ARGS 1.5.0 CONFIG NAMES AccelerateLAPACK
+    FIND_PACKAGE_ARGS 1.6.0 CONFIG NAMES AccelerateLAPACK
 )
 
 set(AccelerateLAPACK_INCLUDE_PACKAGING FALSE)
