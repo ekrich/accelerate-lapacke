@@ -69,31 +69,45 @@ via Homebrew or MacPorts):
 
 First, you must [select a MacOS SDK matching your MacOS system][sdk-selection].
 
-Then use the `accelerate-lapacke32` preset (or the `accelerate-lapacke64` preset
-for the ILP64 interface) with CMake called by `xcrun`, as described in the SDK
-selection:
+Then use the `accelerate-lapacke32-install` preset (or the
+`accelerate-lapacke64-install` preset for the ILP64 interface) with CMake called
+by `xcrun`, as described in the SDK selection:
 
 ```shell
-$ cmake --workflow --preset accelerate-lapacke32
+$ cmake --workflow --preset accelerate-lapacke32-install
 ```
 
-This will configure LAPACKE to be installed in your `~/.local` directory by
+This will configure and install LAPACKE in your `~/.local` directory by
 default. If you prefer a different install location (e.&nbsp;g. `/opt/custom`),
 you can change it using a `CMakeUserPresets.json` file, for which a template
 file is provided:
 
 ```shell
-$ cmake --workflow --preset user-accelerate-lapacke32
+$ cmake --workflow --preset user-accelerate-lapacke32-install
 ```
 
 I wouldn't recommend installing to `/usr/local` (used by Homebrew on Intel Macs)
 or `/opt/local` (used by MacPorts).
 
+If your install location is write protected, use the `user-accelerate-lapacke32`
+and `user-accelerate-lapacke64` workflow presets to configure and build the
+project only and then install with:
+
+```shell
+$ sudo cmake --build --preset user-accelerate-lapacke32-install
+```
+
+and
+
+```shell
+$ sudo cmake --build --preset user-accelerate-lapacke64-install
+```
+
 Analyzing the resulting `.dylib` with `otool`, you can see:
 
 ```shell
-$ otool -L ./build/32/_deps/reference-lapack-build/lib/liblapacke.dylib
-./build/32/_deps/reference-lapack-build/lib/liblapacke.dylib:
+$ otool -L <install prefix>/lib/liblapacke.dylib
+<install prefix>/lib/liblapacke.dylib:
     @rpath/liblapacke.3.dylib (compatibility version 3.0.0, current version 3.12.0)
     /System/Library/Frameworks/Accelerate.framework/Versions/A/Accelerate (compatibility version 1.0.0, current version 4.0.0)
     /usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1351.0.0)
