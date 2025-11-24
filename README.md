@@ -40,7 +40,6 @@ Accelerate can be found there, too.
 - [How to compile](#how-to-compile)
   - [Prerequisites](#prerequisites)
   - [Workflow with CMake](#workflow-with-cmake)
-    - [CMake v4 compatibility](#cmake-v4-compatibility)
   - [Using LAPACKE in another project](#using-lapacke-in-another-project)
 
 ## How to compile ##
