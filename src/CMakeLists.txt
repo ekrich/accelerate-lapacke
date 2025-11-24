@@ -23,12 +23,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
 
-get_target_property(ACCELERATE_NEW_LAPACK_VERSION LAPACK::NEW_LAPACK VERSION)
-
 FetchContent_Declare(
     reference-lapack
     GIT_REPOSITORY "https://github.com/Reference-LAPACK/lapack.git"
-    GIT_TAG "v${ACCELERATE_NEW_LAPACK_VERSION}"
+    GIT_TAG "v${ACCELERATE_LAPACK_ILAVER_VERSION}"
 )
 
 # Set configuration options for Reference LAPACK
@@ -36,54 +34,77 @@ set(BUILD_SHARED_LIBS ON CACHE BOOL "")
 set(CBLAS OFF CACHE BOOL "")
 set(LAPACKE ON CACHE BOOL "")
 
-if (CMAKE_VERSION VERSION_GREATER_EQUAL 4)
-    # CMake deprecated all CMake versions prior to v3.5. The relevant Reference
-    # LAPACK versions still use v3.2, which leads to an error, unless we
-    # override this:
+if (BLA_SIZEOF_INTEGER EQUAL 8)
+    set(BUILD_INDEX64 ON CACHE BOOL "")
+else ()
+    set(BUILD_INDEX64 OFF CACHE BOOL "")
+endif ()
+
+# Inject the 32 bit BLAS and LAPACK link flags into the
+# CheckFortranFunctionExists macro to help the Reference LAPACK CMake script to
+# pass the tests for `dgemm` and `dgeqrt`.
+set(CMAKE_REQUIRED_LINK_OPTIONS ${LAPACK32_LINKER_FLAGS})
+
+# CMake deprecated all CMake versions prior to v3.5. The relevant Reference
+# LAPACK versions still use v3.2, which leads to an error, unless we
+# override this.
+if (CMAKE_VERSION VERSION_GREATER_EQUAL 4 AND ACCELERATE_LAPACK_ILAVER_VERSION VERSION_LESS 3.12.0)
+    # This will create a CMAKE_POLICY_VERSION_MINIMUM cache variable when
+    # including ReferenceLAPACK, but this does not propagate into the
+    # try_compile()'s:
+    set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+    # This CMAKE_POLICY_VERSION_MINIMUM environment variable will propagate into
+    # ReferenceLAPACK's try_compile()'s, but won't create the
+    # CMAKE_POLICY_VERSION_MINIMUM cache variable on its own:
     set(ENV{CMAKE_POLICY_VERSION_MINIMUM} 3.5)
 endif ()
 
-set(BLAS_LIBRARIES_BACKUP "BLAS::BLAS")
-set(LAPACK_LIBRARIES_BACKUP "LAPACK::LAPACK")
+set(BLAS_LINKER_FLAGS_BACKUP "${BLAS_LINKER_FLAGS}")
+set(LAPACK_LINKER_FLAGS_BACKUP "${LAPACK_LINKER_FLAGS}")
 
-# Set the BLAS and LAPACK libraries to the new 32bit targets. This helps the
-# Reference LAPACK CMake script to pass the CheckFortranFunctionExists tests for
-# `dgemm` and `dgeqrt`.
-set(BLAS_LIBRARIES "BLAS::NEW_BLAS_IMPORTED")
-set(LAPACK_LIBRARIES "LAPACK::NEW_LAPACK_IMPORTED")
+# Temporarily clear the BLAS and LAPACK link flags to prevent the Reference
+# LAPACK CMake script to add them to the CMAKE_EXE_LINKER_FLAGS variable, which
+# would break the following try_compile()'s.
+set(BLAS_LINKER_FLAGS "")
+set(LAPACK_LINKER_FLAGS "")
 
 FetchContent_MakeAvailable(reference-lapack)
 
-# Restore BLAS and LAPACK libraries to what they were before (32bit or 64bit)
-set(BLAS_LIBRARIES "${BLAS_LIBRARIES_BACKUP}")
-set(LAPACK_LIBRARIES "${LAPACK_LIBRARIES_BACKUP}")
+# Restore BLAS and LAPACK link flags to what they were before (32bit or 64bit)
+set(BLAS_LINKER_FLAGS "${BLAS_LINKER_FLAGS_BACKUP}")
+set(LAPACK_LINKER_FLAGS "${LAPACK_LINKER_FLAGS_BACKUP}")
 
 if (CMAKE_VERSION VERSION_GREATER_EQUAL 4)
+    unset(CMAKE_POLICY_VERSION_MINIMUM)
     unset(ENV{CMAKE_POLICY_VERSION_MINIMUM})
 endif ()
 
 if (BUILD_INDEX64)
     if (TARGET "blas64")
         message(FATAL_ERROR "LAPACKE failed to use BLAS provided by Accelerate and included Netlib's Reference BLAS implementation into the build.")
-    elseif (TARGET "lapack64")
+    endif ()
+
+    if (TARGET "lapack64")
         message(FATAL_ERROR "LAPACKE failed to use LAPACK provided by Accelerate and included Netlib's Reference LAPACK implementation into the build.")
     endif ()
 
-    # Replace the LINK_LIBRARIES of the lapacke64 target with the ILP64 ones.
-    # The lapacke64 target was created linking to the NEW_LAPACK_IMPORTED
-    # target, which we had to add to satisfy the Check... tests, that the
-    # Reference LAPACK build script does.
-    set_target_properties(lapacke64 PROPERTIES LINK_LIBRARIES "${LAPACK_LIBRARIES}")
+    # Set the LINK_OPTIONS of the lapacke64 target to the NEWLAPACK ILP64 ones.
+    # The lapacke64 target was created with empty LAPACK_LINKER_FLAGS, which we
+    # had to do to satisfy the Check... tests, that the Reference LAPACK build
+    # script does.
+    target_link_options(lapacke64 PRIVATE ${LAPACK64_LINKER_FLAGS})
 else ()
     if (TARGET "blas")
         message(FATAL_ERROR "LAPACKE failed to use BLAS provided by Accelerate and included Netlib's Reference BLAS implementation into the build.")
-    elseif (TARGET "lapack")
+    endif ()
+
+    if (TARGET "lapack")
         message(FATAL_ERROR "LAPACKE failed to use LAPACK provided by Accelerate and included Netlib's Reference LAPACK implementation into the build.")
     endif ()
 
-    # Replace the LINK_LIBRARIES of the lapacke target with the NEWLAPACK ones.
-    # The lapacke target was created linking to the NEW_LAPACK_IMPORTED target,
-    # which we had to add to satisfy the Check... tests, that the Reference
-    # LAPACK build script does.
-    set_target_properties(lapacke PROPERTIES LINK_LIBRARIES "${LAPACK_LIBRARIES}")
+    # Set the LINK_OPTIONS of the lapacke target to the NEWLAPACK ones. The
+    # lapacke target was created with empty LAPACK_LINKER_FLAGS, which we had to
+    # do to satisfy the Check... tests, that the Reference LAPACK build script
+    # does.
+    target_link_options(lapacke PRIVATE ${LAPACK32_LINKER_FLAGS})
 endif ()

@@ -23,11 +23,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ]]
 
-set(CMAKE_MAXIMUM_SUPPORTED_VERSION 4.0)
+set(CMAKE_MAXIMUM_SUPPORTED_VERSION 4.1)
 
 cmake_minimum_required(VERSION 3.12...${CMAKE_MAXIMUM_SUPPORTED_VERSION})
 
-project(AccelerateLAPACKE VERSION 1.7.0 LANGUAGES C Fortran)
+project(AccelerateLAPACKE VERSION 2.0.0 LANGUAGES C Fortran)
 
 include(FetchContent)
 
@@ -37,16 +37,12 @@ if (NOT IS_TOP_LEVEL)
     message(FATAL_ERROR "This project is meant to be built as a stand-alone project, only.")
 endif ()
 
-option(BUILD_INDEX64 "Link to ILP64 version of LAPACK?" OFF)
-
-message(STATUS "Trying to link to ILP64 interface of LAPACK: ${BUILD_NEW_LAPACK}")
-
 FetchContent_Declare(
     AccelerateLAPACK
     GIT_REPOSITORY "https://github.com/lepus2589/accelerate-lapack.git"
-    GIT_TAG v1.6.0
+    GIT_TAG v2.0.0
     SYSTEM
-    FIND_PACKAGE_ARGS 1.6.0 CONFIG NAMES AccelerateLAPACK
+    FIND_PACKAGE_ARGS 2.0.0 CONFIG NAMES AccelerateLAPACK
 )
 
 set(AccelerateLAPACK_INCLUDE_PACKAGING FALSE)
