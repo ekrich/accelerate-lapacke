@@ -27,7 +27,7 @@ set(CMAKE_MAXIMUM_SUPPORTED_VERSION 4.1)
 
 cmake_minimum_required(VERSION 3.12...${CMAKE_MAXIMUM_SUPPORTED_VERSION})
 
-project(AccelerateLAPACKE VERSION 1.7.0 LANGUAGES C Fortran)
+project(AccelerateLAPACKE VERSION 2.0.0 LANGUAGES C Fortran)
 
 include(FetchContent)
 
