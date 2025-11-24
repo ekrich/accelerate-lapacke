@@ -62,26 +62,40 @@
     {
       "name": "accelerate-lapacke32",
       "inherits": [
-        "verbose",
-        "install"
+        "verbose"
       ],
-      "displayName": "LAPACKE 32bit build linking against Accelerate and installation",
+      "displayName": "LAPACKE 32bit build linking against Accelerate",
       "configurePreset": "accelerate-lapacke32"
+    },
+    {
+      "name": "accelerate-lapacke32-install",
+      "inherits": [
+        "install",
+        "accelerate-lapacke32"
+      ],
+      "displayName": "LAPACKE 32bit build linking against Accelerate and installation"
     },
     {
       "name": "accelerate-lapacke64",
       "inherits": [
-        "verbose",
-        "install"
+        "verbose"
       ],
-      "displayName": "LAPACKE 64bit build linking against Accelerate ILP64 interface and installation",
+      "displayName": "LAPACKE 64bit build linking against Accelerate ILP64 interface",
       "configurePreset": "accelerate-lapacke64"
+    },
+    {
+      "name": "accelerate-lapacke64-install",
+      "inherits": [
+        "install",
+        "accelerate-lapacke64"
+      ],
+      "displayName": "LAPACKE 64bit build linking against Accelerate ILP64 interface and installation"
     }
   ],
   "workflowPresets": [
     {
       "name": "accelerate-lapacke32",
-      "displayName": "LAPACKE 32bit build linking against Accelerate and installation",
+      "displayName": "LAPACKE 32bit build linking against Accelerate",
       "steps": [
         {
           "type": "configure",
@@ -94,8 +108,22 @@
       ]
     },
     {
+      "name": "accelerate-lapacke32-install",
+      "displayName": "LAPACKE 32bit build linking against Accelerate and installation",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "accelerate-lapacke32"
+        },
+        {
+          "type": "build",
+          "name": "accelerate-lapacke32-install"
+        }
+      ]
+    },
+    {
       "name": "accelerate-lapacke64",
-      "displayName": "LAPACKE 64bit build linking against Accelerate ILP64 interface and installation",
+      "displayName": "LAPACKE 64bit build linking against Accelerate ILP64 interface",
       "steps": [
         {
           "type": "configure",
@@ -104,6 +132,20 @@
         {
           "type": "build",
           "name": "accelerate-lapacke64"
+        }
+      ]
+    },
+    {
+      "name": "accelerate-lapacke64-install",
+      "displayName": "LAPACKE 64bit build linking against Accelerate ILP64 interface and installation",
+      "steps": [
+        {
+          "type": "configure",
+          "name": "accelerate-lapacke64"
+        },
+        {
+          "type": "build",
+          "name": "accelerate-lapacke64-install"
         }
       ]
     }
